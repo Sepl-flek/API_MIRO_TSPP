@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 
@@ -23,7 +25,10 @@ class MiroBoard:
         need_url = self.url + "sticky_notes"
         response = requests.post(need_url, headers=self.headers, json=data)
 
-        return response.status_code
+        if response.status_code != 201:
+            raise "something went wrong"
+
+        return json.loads(response.content)['id']
 
     def add_image(self, url, x=0, y=0):
         data = {
@@ -34,7 +39,10 @@ class MiroBoard:
         need_url = self.url + "images"
         response = requests.post(need_url, headers=self.headers, json=data)
 
-        return response.status_code
+        if response.status_code != 201:
+            raise "something went wrong"
+
+        return json.loads(response.content)['id']
 
     def add_text(self, content, fontSize=14, x=0, y=0):
         data = {
@@ -46,4 +54,8 @@ class MiroBoard:
         need_url = self.url + "texts"
         response = requests.post(need_url, headers=self.headers, json=data)
 
-        return response.status_code
+        if response.status_code != 201:
+            raise "something went wrong"
+
+        return json.loads(response.content)['id']
+
