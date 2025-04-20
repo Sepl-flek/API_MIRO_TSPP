@@ -1,4 +1,5 @@
 import json
+import os
 
 import requests
 
@@ -22,13 +23,14 @@ class MiroBoard:
             "style": {"fillColor": color},
         }
 
-        need_url = self.url + "sticky_notes"
-        response = requests.post(need_url, headers=self.headers, json=data)
+        url = self.url + "sticky_notes"
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            return json.loads(response.content)["id"]
 
-        if response.status_code != 201:
-            raise "something went wrong"
-
-        return json.loads(response.content)['id']
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
     def add_image(self, url, x=0, y=0):
         data = {
@@ -36,13 +38,14 @@ class MiroBoard:
             "position": {"x": x, "y": y},
         }
 
-        need_url = self.url + "images"
-        response = requests.post(need_url, headers=self.headers, json=data)
+        url = self.url + "images"
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            return json.loads(response.content)["id"]
 
-        if response.status_code != 201:
-            raise "something went wrong"
-
-        return json.loads(response.content)['id']
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
     def add_text(self, content, fontSize=14, x=0, y=0):
         data = {
@@ -51,11 +54,90 @@ class MiroBoard:
             "style": {"fontSize": fontSize},
         }
 
-        need_url = self.url + "texts"
-        response = requests.post(need_url, headers=self.headers, json=data)
+        url = self.url + "texts"
+        try:
+            response = requests.post(url, headers=self.headers, json=data)
+            return json.loads(response.content)["id"]
 
-        if response.status_code != 201:
-            raise "something went wrong"
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
 
-        return json.loads(response.content)['id']
+    def get_sticker(self, item_id, path=''):
 
+        url = self.url + "sticky_notes/" + item_id
+
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            data = json.loads(response.content)['data']
+
+            filename = f"sticker_{item_id}.txt"
+            if path:
+                filepath = os.path.join(path, filename)
+            else:
+                filepath = filename
+
+            with open(filepath, 'w', encoding='UTF-8') as file:
+                file.write(f'content: {data['content']}\n')
+                file.write(f'shape: {data['shape']}')
+
+            return True
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return False
+
+    def get_image(self, item_id, path=''):
+
+        url = self.url + "images/" + item_id
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+
+            image_url = json.loads(response.content)['data']['imageUrl']
+
+            intermediate_response  = requests.get(image_url, headers=self.headers)
+            intermediate_response .raise_for_status()
+
+            intermediate_data = intermediate_response.json()
+            final_image_url = intermediate_data['url']
+
+            image_response = requests.get(final_image_url)
+            image_response.raise_for_status()
+
+            filename = f"image_{item_id}.png"
+            if path:
+                filepath = os.path.join(path, filename)
+            else:
+                filepath = filename
+
+            with open(filepath, 'wb') as file:
+                file.write(image_response.content)
+
+            return True
+
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return False
+
+    def get_text(self, item_id, path=''):
+
+        url = self.url + "texts/" + item_id
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            text = json.loads(response.content)['data']['content']
+
+            filename = f"text_{item_id}.txt"
+            if path:
+                filepath = os.path.join(path, filename)
+            else:
+                filepath = filename
+
+            with open(filepath, 'w', encoding='UTF-8') as file:
+                file.write(text)
+
+            return True
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return False
