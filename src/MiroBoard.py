@@ -44,7 +44,6 @@ class MiroBoard:
         url = self.url + "images"
         try:
             response = requests.post(url, headers=self.headers, json=data)
-            print(response.content)
             response.raise_for_status()
             return json.loads(response.content)["id"]
 
