@@ -1,6 +1,11 @@
 import argparse
+import json
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 from MiroBoard import MiroBoard
+
+load_dotenv()
 
 
 def _require(value, name):
@@ -18,31 +23,72 @@ def _init_board(args) -> MiroBoard:
 
 
 def cmd_add_sticker(args):
-    pass
+    board = _init_board(args)
+    sticker_id = board.add_sticker(
+        content=args.text,
+        color=args.color,
+        x=args.x,
+        y=args.y,
+        width=args.width,
+        shape=args.shape,
+    )
+    print("sticker created:", sticker_id)
 
 
 def cmd_add_text(args):
-    pass
+    board = _init_board(args)
+    text_id = board.add_text(
+        content=args.text,
+        fontSize=args.size,
+        x=args.x,
+        y=args.y,
+    )
+    print("text created:", text_id)
 
 
 def cmd_add_image(args):
-    pass
+    board = _init_board(args)
+    img_id = board.add_image(
+        url=args.url,
+        x=args.x,
+        y=args.y,
+        width=args.width,
+    )
+    print("image added:", img_id)
 
 
 def cmd_get_item(args):
-    pass
+    board = _init_board(args)
+    ok = {
+        "sticker": board.get_sticker,
+        "image": board.get_image,
+        "text": board.get_text,
+    }[args.type](args.id, path=args.out)
+    print("saved" if ok else "failed")
 
 
 def cmd_template_create(args):
-    pass
+    board = _init_board(args)
+    ok = board.create_template_from_board(args.name, item_ids=args.ids)
+    print("template created" if ok else "failed")
 
 
 def cmd_template_export(args):
-    pass
+    board = _init_board(args)
+    template = board.export_template(args.name)
+    if template:
+        Path(f"{args.name}.json").write_text(
+            json.dumps(template, ensure_ascii=False, indent=4), encoding="utf-8"
+        )
+        print(f"exported to {args.name}.json")
+    else:
+        print("template not found")
 
 
 def cmd_template_import(args):
-    pass
+    board = _init_board(args)
+    ok = board.import_template(args.name, position={"x": args.x, "y": args.y})
+    print("template imported" if ok else "failed")
 
 
 def build_parser() -> argparse.ArgumentParser:
