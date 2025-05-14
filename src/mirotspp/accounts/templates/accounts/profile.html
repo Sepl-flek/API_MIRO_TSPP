@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ title }}</title>
+</head>
+<body>
+<h1>Привет, {{ user.username }}!</h1>
+<p>Email: {{ user.email|default:"не указан" }}</p>
+<p>Дата регистрации: {{ user.date_joined|date:"d.m.Y" }}</p>
+<form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Выйти</button>
+</form>
+</body>
+</html>
