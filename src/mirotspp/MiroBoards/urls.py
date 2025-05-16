@@ -1,11 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import SimpleRouter
 
-from MiroBoards.views import BoardsViewSet
+from MiroBoards.views import BoardsViewSet, ItemsViewSet, board_items_list
 
 router = SimpleRouter()
 router.register(r'api/board', BoardsViewSet, basename='boards')
+router.register(r'api/board/(?P<board_id>\d+)/items', ItemsViewSet, basename='board-items')
 
-urlpatterns = []
+urlpatterns = [
+    path(r'board/<int:board_id>/items/', board_items_list, name='board-item-list')
+]
 
 urlpatterns += router.urls

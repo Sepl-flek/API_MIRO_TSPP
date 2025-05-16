@@ -10,8 +10,6 @@ class ItemSerializer(ModelSerializer):
 
 
 class BoardsSerializer(ModelSerializer):
-    items = ItemSerializer(many=True, read_only=True)
-
     class Meta:
         model = Boards
-        fields = ('id', 'name', 'board_id', 'api_key', 'items')
+        fields = ('id', 'name', 'board_id', 'api_key')

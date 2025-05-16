@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Boards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .board-card {
+            transition: transform 0.2s;
+        }
+        .board-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>My Boards</h1>
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Back to Profile</a>
+    </div>
+
+    <div class="row" id="boards-container">
+        <!-- Boards will be loaded here dynamically -->
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Используем правильный endpoint API
+    fetch('/MiroBoard/api/board/')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const container = document.getElementById('boards-container');
+
+            if (data.length === 0) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-info">You have no boards yet.</div></div>';
+                return;
+            }
+
+            data.forEach(board => {
+                const boardCard = `
+                    <div class="col-md-4 mb-4">
+                        <div class="card board-card">
+                            <div class="card-body">
+                                <h5 class="card-title">${board.name}</h5>
+                                <p class="card-text">Board ID: ${board.board_id}</p>
+                                <!-- Исправленная ссылка согласно вашим URL-паттернам -->
+                                <a href="/MiroBoard/board/${board.id}/items/" class="btn btn-primary">View Items</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', boardCard);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching boards:', error);
+            document.getElementById('boards-container').innerHTML =
+                '<div class="col-12"><div class="alert alert-danger">Error loading boards. Please try again later.</div></div>';
+        });
+});
+</script>
+</body>
+</html>
