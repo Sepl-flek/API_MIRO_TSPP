@@ -28,3 +28,6 @@ class Items(models.Model):
     item_id = models.CharField(default=0)
     type = models.CharField(max_length=15, choices=TYPE_CHOICE)
     content = models.JSONField()
+
+    def __str__(self):
+        return f"{self.board}: {self.type}, {self.item_id}"
