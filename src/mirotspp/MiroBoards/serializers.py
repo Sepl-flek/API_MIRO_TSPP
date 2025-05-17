@@ -7,6 +7,7 @@ class ItemSerializer(ModelSerializer):
     class Meta:
         model = Items
         fields = ('board', 'x_coordinate', 'y_coordinate', 'item_id', 'type', 'content')
+        read_only_fields = ['board']
 
 
 class BoardsSerializer(ModelSerializer):

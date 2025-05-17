@@ -4,14 +4,77 @@
     <meta charset="UTF-8">
     <title>Items на доске: {{ board.name }}</title>
     <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; vertical-align: top; }
-        textarea { width: 100%; height: 60px; }
-        .buttons { margin-bottom: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        textarea {
+            width: 100%;
+            height: 60px;
+        }
+
+        .buttons {
+            margin-bottom: 20px;
+        }
+
+        .buttons button {
+            padding: 10px 15px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .buttons button:hover {
+            background-color: #0056b3;
+        }
+
+        #itemModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            width: 400px;
+        }
+
+        #itemModal h3 {
+            margin-top: 0;
+        }
+
+        #itemModal input, #itemModal textarea {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #itemModal button {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
-     <a href="{% url 'my_boards' %}" style="display:inline-block; margin-bottom: 15px; padding: 8px 12px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">← Вернуться к доскам</a>
+    <a href="{% url 'my_boards' %}" style="display:inline-block; margin-bottom: 15px; padding: 8px 12px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px;">← Вернуться к доскам</a>
+
     <h1>Items на доске: {{ board.name }}</h1>
 
     <div class="buttons">
@@ -48,5 +111,81 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Модальное окно -->
+    <div id="itemModal">
+        <h3 id="modalTitle">Добавить элемент</h3>
+        <form id="itemForm">
+            <input type="hidden" id="itemType">
+            <label>X: <input type="number" id="x" required></label><br>
+            <label>Y: <input type="number" id="y" required></label><br>
+            <label>Контент (JSON):<br>
+                <textarea id="contentJson" placeholder='{"content": "text", "shape": "square"}' required></textarea>
+            </label><br>
+            <button type="submit">Добавить</button>
+            <button type="button" onclick="closeModal()">Отмена</button>
+        </form>
+    </div>
+
+    <script>
+        const boardId = "{{ board.id }}";
+        const csrfToken = '{{ csrf_token }}';
+
+        function openModal(type) {
+            document.getElementById("itemType").value = type;
+            document.getElementById("modalTitle").textContent = `Добавить ${type === 'stick' ? 'стикер' : type === 'txt' ? 'текст' : 'изображение'}`;
+            document.getElementById("x").value = "";
+            document.getElementById("y").value = "";
+            document.getElementById("contentJson").value = "";
+            document.getElementById("itemModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("itemModal").style.display = "none";
+        }
+
+        document.getElementById("add-text").addEventListener("click", () => openModal("txt"));
+        document.getElementById("add-image").addEventListener("click", () => openModal("img"));
+        document.getElementById("add-sticker").addEventListener("click", () => openModal("stick"));
+
+        document.getElementById("itemForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const type = document.getElementById("itemType").value;
+            const x = document.getElementById("x").value;
+            const y = document.getElementById("y").value;
+            const contentJsonRaw = document.getElementById("contentJson").value;
+
+            let contentJson;
+            try {
+                contentJson = JSON.parse(contentJsonRaw);
+            } catch (e) {
+                alert("Ошибка: введённый JSON некорректен.");
+                return;
+            }
+
+            const response = await fetch(`/MiroBoard/api/board/${boardId}/items/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    x_coordinate: x,
+                    y_coordinate: y,
+                    type: type,
+                    content: JSON.stringify(contentJson)
+                })
+            });
+
+            if (response.ok) {
+                closeModal();
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert("Ошибка: " + JSON.stringify(error));
+            }
+        });
+    </script>
 </body>
 </html>
