@@ -27,6 +27,7 @@ class ItemsViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        tasks.to_update_items(self.kwargs.get('board_id'))
         return Items.objects.filter(
             board__user=self.request.user,
             board_id=self.kwargs.get('board_id')

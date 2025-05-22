@@ -25,7 +25,7 @@ class Items(models.Model):
     board = models.ForeignKey(Boards, on_delete=models.CASCADE, related_name='items')
     x_coordinate = models.DecimalField(max_digits=10, decimal_places=2)
     y_coordinate = models.DecimalField(max_digits=10, decimal_places=2)
-    item_id = models.CharField(default=0)
+    item_id = models.CharField(default=0, db_index=True)
     type = models.CharField(max_length=15, choices=TYPE_CHOICE)
     content = models.JSONField()
 

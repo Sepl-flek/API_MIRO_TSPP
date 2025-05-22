@@ -17,7 +17,7 @@ class MiroBoard:
         self.url = f"https://api.miro.com/v2/boards/{self.board_id}/"
 
     def add_sticker(
-        self, content, color="light_yellow", x=0, y=0, width=199, shape="square"
+            self, content, color="light_yellow", x=0, y=0, width=199, shape="square"
     ):
         data = {
             "data": {"content": content, "shape": shape},
@@ -224,7 +224,7 @@ class MiroBoard:
                             response.raise_for_status()
 
                             if response.headers.get("Content-Type", "").startswith(
-                                "image/"
+                                    "image/"
                             ):
                                 image_data = response.content
                             else:
