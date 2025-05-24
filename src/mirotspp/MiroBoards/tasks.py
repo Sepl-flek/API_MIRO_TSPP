@@ -65,7 +65,7 @@ def to_update_items(board_id):
         elif item_type == "image":
             url = item["data"]["imageUrl"]
             width = item["geometry"]["width"]
-            content_json = {"url": url, width: "width"}
+            content_json = {"url": url, "width": width}
             type_field = "img"
         else:
             continue
