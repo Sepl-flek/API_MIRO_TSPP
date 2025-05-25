@@ -72,7 +72,8 @@ function renderItems(items) {
             <td>${item.y_coordinate}</td>
             <td>${item.type}</td>
             <td><pre>${JSON.stringify(item.content, null, 2)}</pre></td>
-            <td><button class="save-item" data-item-id="${item.id}">Save</button></td>
+            <td><button class="save-item" data-item-id="${item.item_id}" data-item-type="${item.type}">Save</button></td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -91,3 +92,27 @@ async function fetchItems() {
 }
 
 document.addEventListener("DOMContentLoaded", fetchItems);
+
+document.addEventListener("click", async function(event) {
+    if (event.target.classList.contains("save-item")) {
+        const itemId = event.target.dataset.itemId;
+        const row = event.target.closest("tr");
+        const type = row.children[3].textContent.trim();
+
+        const response = await fetch(`/MiroBoard/api/board/${boardId}/item/${itemId}/save/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken
+            },
+            body: JSON.stringify({ type: type })
+        });
+
+        if (response.ok) {
+            alert("Item сохранён успешно!");
+        } else {
+            alert("Ошибка при сохранении item.");
+        }
+    }
+});
+

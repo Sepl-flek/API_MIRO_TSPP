@@ -1,10 +1,15 @@
 import json
 
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
+from django.utils.decorators import method_decorator
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 
+from MiroBoard import MiroBoard
 from MiroBoards.models import Boards, Items
 from MiroBoards.serializers import BoardsSerializer, ItemSerializer
 from . import tasks
@@ -51,8 +56,7 @@ class ItemsViewSet(ModelViewSet):
             item_id = tasks.add_text_to_miro(board.id, json_content, x=x, y=y)
         elif item_type == 'img':
             item_id = tasks.add_image_to_miro(board.id, json_content, x=x, y=y)
-        #todo block else
-
+        # todo block else
 
         serializer.save(board=board, item_id=str(item_id))
 
@@ -62,3 +66,28 @@ def board_items_list(request, board_id):
     board = get_object_or_404(Boards, id=board_id, user=request.user)
     items = Items.objects.filter(board=board)
     return render(request, 'MiroBoards/board_items.html', {'board': board, 'items': items})
+
+
+class SaveItemView(View):
+    def post(self, request, item_id, board_id):
+
+        item_type = json.loads(request.body).get("type")
+        board = get_object_or_404(Boards, pk=board_id)
+        miro = MiroBoard(board.board_id, board.api_key)
+
+        try:
+            if item_type == "stick":
+                success = miro.get_sticker(item_id)
+            elif item_type == "img":
+                success = miro.get_image(item_id)
+            elif item_type == "txt":
+                success = miro.get_text(item_id)
+            else:
+                return JsonResponse({"error": "Unknown item type"}, status=400)
+
+            if success:
+                return JsonResponse({"success": True})
+            return JsonResponse({"error": "Failed to save"}, status=500)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
