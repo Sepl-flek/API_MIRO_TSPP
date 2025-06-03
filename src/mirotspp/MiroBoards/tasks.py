@@ -6,7 +6,7 @@ from MiroBoard import MiroBoard
 from MiroBoards.models import Boards, Items
 
 
-# todo shared_task: run redis server
+@shared_task
 def add_sticker_to_miro(board_id, json_content, x=0, y=0):
     board = Boards.objects.get(id=board_id)
     api_token = board.api_key
@@ -17,7 +17,7 @@ def add_sticker_to_miro(board_id, json_content, x=0, y=0):
     miro = MiroBoard(board_id=board.board_id, API_TOKEN=api_token)
     return miro.add_sticker(content, color, x, y, width, shape)
 
-
+@shared_task
 def add_text_to_miro(board_id, json_content, x=0, y=0):
     board = Boards.objects.get(id=board_id)
     api_token = board.api_key
@@ -26,7 +26,7 @@ def add_text_to_miro(board_id, json_content, x=0, y=0):
     miro = MiroBoard(board_id=board.board_id, API_TOKEN=api_token)
     return miro.add_text(content=content, fontSize=fontSize, x=x, y=y)
 
-
+@shared_task
 def add_image_to_miro(board_id, json_content, x=0, y=0):
     board = Boards.objects.get(id=board_id)
     api_token = board.api_key
@@ -70,13 +70,19 @@ def to_update_items(board_id):
         else:
             continue
 
-        try:
-            obj = Items.objects.get(item_id=item_id)
-            obj.x_coordinate = x
-            obj.y_coordinate = y
-            obj.content = content_json
-            obj.save()
+        save_item.delay(item_id, x, y, content_json, board_id, type_field)
 
-        except ObjectDoesNotExist:
-            if content_json:
-                obj = Items.objects.create(item_id=item_id, board=board, type=type_field, x_coordinate=x, y_coordinate=y, content=content_json)
+
+@shared_task
+def save_item(item_id, x, y, content_json, board_id, type_field):
+    try:
+        obj = Items.objects.get(item_id=item_id)
+        obj.x_coordinate = x
+        obj.y_coordinate = y
+        obj.content = content_json
+        obj.save()
+    except ObjectDoesNotExist as exc:
+        if content_json:
+            board = Boards.objects.get(id=board_id)
+            obj = Items.objects.create(item_id=item_id, board=board, type=type_field, x_coordinate=x, y_coordinate=y,
+                                       content=content_json)

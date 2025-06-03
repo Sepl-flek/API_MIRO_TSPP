@@ -51,11 +51,11 @@ class ItemsViewSet(ModelViewSet):
 
         item_id = 0
         if item_type == 'stick':
-            item_id = tasks.add_sticker_to_miro(board.id, json_content, x=x, y=y)
+            item_id = tasks.add_sticker_to_miro.delay(board.id, json_content, x=x, y=y)
         elif item_type == 'txt':
-            item_id = tasks.add_text_to_miro(board.id, json_content, x=x, y=y)
+            item_id = tasks.add_text_to_miro.delay(board.id, json_content, x=x, y=y)
         elif item_type == 'img':
-            item_id = tasks.add_image_to_miro(board.id, json_content, x=x, y=y)
+            item_id = tasks.add_image_to_miro.delay(board.id, json_content, x=x, y=y)
         # todo block else
 
         serializer.save(board=board, item_id=str(item_id))
